@@ -32,14 +32,14 @@ by Sayan K.
       - Tags: Optional, if you fancy.
 
     Click on **Create Cluster**
-3. You will be on a page like this:
+3. You will be on a page like this:  
    ![Cluster Homepage](images/DOKUClusterPage.png)  
    *You can ignore the Getting Started guide for now, hit on the X next to it to close the guide.*  
    Head over to the **Nodes tab**, and expand the pool you have.  
-   You will see something like this:
+   You will see something like this:  
    ![Nodes Initializing](images/NodesProvisioning.png)  
    You can now safely grab a coffee and wait for the nodes to get provisioned. PS: It might take a while.  
-   Wait till the dashboard looks like this:
+   Wait till the dashboard looks like this:  
    ![Provision Done](images/ProvisionDone.png)  
    Now, Head over to the **Overview tab** and **Download Config File**.  
    It will be named like `<Name you chose in Section 1 Step 2 Finalize Step>-kubeconfig.yaml`. We need this for our kubectl to communicate with the cluster.
@@ -62,7 +62,7 @@ by Sayan K.
     ```powershell
     kubectl get nodes
     ```
-    You will see something like this:
+    You will see something like this:  
     ![kubectl get nodes](images/kubectlgetnodes.png)  
     Don't worry if your AGE is different than mine.  
       
@@ -73,7 +73,7 @@ by Sayan K.
 1. Clone the official MySQL Operator Repository
    ```bash
    git clone https://github.com/mysql/mysql-operator.git
-   ```
+   ```  
    ![Git Clone](images/gitclone.png)  
    Enter the directory
    ```bash
@@ -82,7 +82,7 @@ by Sayan K.
    Install the operator using helm
    ```bash
    helm install mysql-operator helm/mysql-operator --namespace mysql-operator --create-namespace
-   ```
+   ```  
    ![Helm Install](images/helminstall.png)  
 2. Then we need to create a namespace for our cluster.
    ```bash
@@ -91,7 +91,7 @@ by Sayan K.
    Next, we need to create a secret to store our root password.
    ```bash
    kubectl create secret generic mypwds --from-literal=rootUser=root --from-literal=rootHost=%         --from-literal=rootPassword="yourPasswordHere" --namespace sql-cluster
-   ```
+   ```  
     ![Create Secret](images/createsecret.png)  
     Replace `yourPasswordHere` with the password you want.
 3. Now, we need to make a cluster defintion file like [dbconfig.yaml](dbconfig.yaml) having content:
@@ -112,12 +112,12 @@ by Sayan K.
 4. Apply the definition.
     ```bash
     kubectl apply -f dbconfig.yaml
-    ```
+    ```  
     ![Kubectl apply dbconfig.yaml](images/kubectlapply.png)  
     Now, we observe the deployment with
     ```bash
     kubectl get innodbcluster --watch  --namespace sql-cluster
-    ```
+    ```  
     ![Kubectl watch deployment](images/kubectlwatchdeploy.png)  
     You can also watch it on the *Kubernetes Dashboard*, which you can access from the *DigitalOcean Dashboard* from Section 1 Step 3. It might take a while for all the instances to spin up, so again, you can grab another coffee! Once you see **all 3 Online**, press **Ctrl+C** to stop watching.
 
@@ -128,17 +128,17 @@ by Sayan K.
 1. The MySQL cluster can be accessed through a service. To know about the service, run
     ```bash
     kubectl get service mycluster  --namespace sql-cluster
-    ```
+    ```  
     ![Cluster Service](images/clusterservice.png)  
     We see that our cluster service has a cluster IP of `10.245.90.34`, but we cannot use this IP itself to access the MySQL server. We need to describe this service to get to know the details about the MySQL server.
     ```bash
     kubectl describe service mycluster  --namespace sql-cluster
-    ```
+    ```  
     ![kubectl describe service](images/kubectldescribeservice.png)  
     Woaaa! That's a lot of text, right? Well, we just need to look for the TargetPort and Endpoints of the mysql section. In our example, we see that the mysql server runs on port `6446` and on IP `10.244.0.64`. If you try to connect to this Endpoint of `10.244.0.64:6446`, you still will not be able to reach the MySQL server as the server currenly is visible only inside the cluster. To make it visible outside, we need to forward the ports.
     ```bash
     kubectl port-forward service/mycluster mysql  --namespace sql-cluster
-    ```
+    ```  
     ![Portforwarding](images/portforwarding1.png)  
     Now, hang on if it seems stuck, it's meant to be like that only. 
 
@@ -148,7 +148,7 @@ by Sayan K.
     ```bash
     mysqlsh --user=root --port=6446 --host 127.0.0.1
     ```
-    It will ask for the password. Enter the root password you created in Section 2 Step 2.
+    It will ask for the password. Enter the root password you created in Section 2 Step 2.  
     ![Entering SQL First time](images/enteringsqlfirsttime.png)  
     See how I changed the mode from `JS` to `SQL` and also selected the `mysql` schema. Now, let us enter some data:
     ```sql
@@ -157,7 +157,7 @@ by Sayan K.
     INSERT INTO testingtable VALUES (1,"Sayan");
 
     SELECT * FROM testingtable;
-    ```
+    ```  
     ![SQL Create Table](images/sqlcreatetable.png)  
     Ah great! We got a SQL Database, but hey! I said something about being resilient and scalable, right? Let's explore those in the next section!
 
@@ -168,25 +168,25 @@ by Sayan K.
       In order to be resilient, the DB Cluster must be ready to handle if any pod fails. So, first, let us check out which host we are currenly connected to in the MySQL Cluster. Run this in the MySQL Shell:
       ```sql
       SHOW VARIABLES WHERE Variable_name = 'hostname';
-      ```
+      ```  
       ![Show Variable 1](images/ShowVar1.png)  
       Oh! So seems like, `mycluster-0` is handling our connection now. Let us simulate a pod failure and take down this pod. Then we will see what happens!  
       Open another new terminal, and set the environment variable once again like in Section 1 Step 4.  
       Let us check the pods once:
       ```bash
       kubectl get pods
-      ```
+      ```  
       ![Kubectl get pods](images/kubectlgetpods.png)  
        Oh, so `mycluster-0` is running, let's terminate it with the following:
       ```bash
       kubectl delete -n sql-cluster pod mycluster-0
       ```
-      Please note, during section 4 procedures, leave the other two terminals (one with the port forwarding active, you will see some stuff like `Handling connection for 6446`, don't worry, that's normal; and the other with the mysql shell running) untouched unless mentioned to work in those. Do not close those or interrupt them.
+      Please note, during section 4 procedures, leave the other two terminals (one with the port forwarding active, you will see some stuff like `Handling connection for 6446`, don't worry, that's normal; and the other with the mysql shell running) untouched unless mentioned to work in those. Do not close those or interrupt them.  
       ![Delete Pod](images/deletepod.png)  
       Please Note: It might freeze after saying that pod has been deleted, like it did with me, if that's the case, just wait for a few seconds before hitting Ctrl+C (that's why the weird exit code)  
-      Now, let's switch back to the MySQL Shell and check which host we are now connected to!
+      Now, let's switch back to the MySQL Shell and check which host we are now connected to!  
       ![New Host](images/newhost.png)  
-      Woaa! See that? Since the `mycluster-0` went down, we connected to `mycluster-2` automatically. Now, let's check if our data still remains:
+      Woaa! See that? Since the `mycluster-0` went down, we connected to `mycluster-2` automatically. Now, let's check if our data still remains:  
       ![Data Remains](images/dataremains.png)  
       Voila! Our data is still there! So, one pod went down, then another pod took over but our data is still there.  
       There you go, Resilience Achieved :white_check_mark:
@@ -214,7 +214,7 @@ by Sayan K.
       And observe the scaling with:
       ```bash
       kubectl get innodbcluster --watch  --namespace sql-cluster
-      ```
+      ```  
       ![Upscaling](images/upscaling.png)  
       See that? It spun up a new pod. You can Ctrl+C to stop watching.  
       Now, let us downscale the cluster to, let's say, 2 instances.
@@ -238,15 +238,15 @@ by Sayan K.
       And observe the scaling with:
       ```bash
       kubectl get innodbcluster --watch  --namespace sql-cluster
-      ```
+      ```  
       ![Downscaling](images/downscaling.png)  
-      Let us confirm with `kubectl get pods`
+      Let us confirm with `kubectl get pods`  
       ![Kubectl get pods](images/oneless.png)  
       And yes, there are only 2 pods.  
       > Note: These changes in pods can also be observed on the Kubernetes Dashboard on the Pods Panel
 
       But wait a minute, what happened to our data?  
-      Well, since we still have that MySQL Shell open, let us check if that data is still there or not.
+      Well, since we still have that MySQL Shell open, let us check if that data is still there or not.  
       ![Scaling Data](images/scalingdata.png)  
       Of course our data is still there! And we are connected to a new host now too!  
       So, putting a check mark next to Scalability too :white_check_mark:
