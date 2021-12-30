@@ -2,6 +2,10 @@
 
 by Sayan K.
 
+![GitHub](https://img.shields.io/github/license/flametron/doku?style=for-the-badge)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-black?style=for-the-badge&logo=kubernetes)
+![SQL](https://img.shields.io/badge/MySQL-00000F?style=for-the-badge&logo=mysql&logoColor=white)
+---
 - **Objective:**  
   Deploy a SQL database cluster which will be redundant and scalable. This walkthough uses the [MySQL Operator for Kubernetes](https://github.com/mysql/mysql-operator) to create a [InnoDB](https://dev.mysql.com/doc/refman/8.0/en/innodb-storage-engine.html) DB Cluster.   All code is Run on [Powershell Core v7.0.3](https://github.com/PowerShell/PowerShell/releases/tag/v7.0.3) on Windows 10 Version 21H1 Build 19043.1415
 
